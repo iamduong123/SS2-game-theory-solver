@@ -40,23 +40,65 @@ export default function InputProcessingPage() {
 
     const handleSolveNow = async () => {
         try {
+            if (!appData || !appData.stableMatchingProblem) {
+                displayPopup("Error", "Stable Matching Problem data is missing.", true);
+                return;
+            }
+
             const body = {
-                specialPlayer: appData.problem.specialPlayer,
-                normalPlayers: appData.problem.players,
-                fitnessFunction: appData.problem.fitnessFunction,
-                defaultPayoffFunction: appData.problem.playerPayoffFunction,
-                conflictSet: appData.problem.conflictSet,
+                // create sets
+                nameOfProblem: appData.stableMatchingProblem.nameOfProblem,
+                numberOfChars: appData.stableMatchingProblem.numberOfChars,
+                numberOfSets: appData.stableMatchingProblem.sets.numberOfSets,
+                numberOfIndividuals: appData.stableMatchingProblem.sets.numberOfIndividuals,
+
+                // mapping over the individuals directly from appData.stableMatchingProblem 
+                // and creating a new array of objects based on the properties of each individual. 
+                // This assumes that appData.stableMatchingProblem directly contains an array of individuals
+                individuals: appData.stableMatchingProblem.individuals.map(individual => ({
+                    name: individual.name,
+                    set: individual.set,
+                    characteristics: individual.characteristics,
+                    argument: individual.argument,
+                })),
+
+                /*
+
+                //On the other hand, assuming a more complex structure where individuals are nested within sets, 
+                //and it was using the flatMap function to flatten the structure and create an array of individuals. 
+                //This was done because the initial data structure had sets containing individuals:
+
+                individuals: appData.stableMatchingProblem.sets.flatMap((set) =>
+                set.individuals.map((individual) => ({
+                name: individual.name,
+                set: set.set_name,
+                characteristics: [...individual.characteristics],
+                argument: [...individual.argument],
+                }))
+            ),
+                */
+
+
+                fitnessFunction: appData.stableMatchingProblem.fitnessFunction,
+
+
                 algorithm: algorithm,
-                distributedCores: distributedCoreParam,
-                populationSize: populationSizeParam,
-                generation: generationParam,
+                // distributedCores: distributedCoreParam,
+                // populationSize: populationSizeParam,
+                // generation: generationParam,
                 maxTime: maxTimeParam,
             }
             setIsLoading(true);
+
             console.log("MAKE a POST request to: ");
-            const res = await axios.post(`http://${process.env.REACT_APP_BACKEND_URL}:${process.env.REACT_APP_BACKEND_PORT}/api/game-theory-solver`, body);
-            // const reswait axios.post(`http://172.20.0.2:${process.env.REACT_APP_BACKEND_PORT}/api/game-theory-solver`, body);
+            // Make a POST request to the updated endpoint
+            const res = await axios.post(
+                `http://${process.env.REACT_APP_BACKEND_URL}:${process.env.REACT_APP_BACKEND_PORT}/api/stable-matching-solver`,
+                body
+            );
             console.log(res.data.data);
+
+
             const runtime = res.data.data.runtime;
             const usedAlgorithm = res.data.data.algorithm;
 
@@ -65,9 +107,9 @@ export default function InputProcessingPage() {
                 data: res.data.data,
                 params: {
                     usedAlgorithm: usedAlgorithm,
-                    distributedCoreParam: distributedCoreParam,
-                    populationSizeParam: populationSizeParam,
-                    generationParam: generationParam,
+                    // distributedCoreParam: distributedCoreParam,
+                    // populationSizeParam: populationSizeParam,
+                    // generationParam: generationParam,
                     maxTimeParam: maxTimeParam
                 }
 
@@ -80,7 +122,7 @@ export default function InputProcessingPage() {
             setIsLoading(false);
             displayPopup("Running failed", "Please check the dataset and try again or contact the admin!", true)
         }
-
+        
     }
 
 
